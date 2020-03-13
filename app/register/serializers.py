@@ -27,7 +27,7 @@ MINIMUM_NECESSARY_FIELDS = [
     "date_of_birth",
     "email",
 ]
-NATIONALLY_REQUIRED_FIELDS = ["state_id", "us_citizen", "is_18_or_over"]
+NATIONALLY_REQUIRED_FIELDS = ["state_id_number", "us_citizen", "is_18_or_over"]
 OPTIONAL_FIELDS = [
     "suffix",
     "phone",
@@ -71,7 +71,7 @@ class RegistrationSerializer(EnumSupportSerializerMixin, serializers.ModelSerial
         choices=STATES, validators=[state_code_validator], required=False
     )
     title = serializers.CharField(required=True)
-    state_id = serializers.CharField(required=False)
+    state_id_number = serializers.CharField(required=False)
     is_18_or_over = RequiredBooleanField(required=False)
     us_citizen = RequiredBooleanField(required=False)
 
