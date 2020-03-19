@@ -11,7 +11,6 @@ from common.validators import state_code_validator, zip_validator
 from election.choices import STATES
 
 from .models import Registration
-from .validators import AddressValidator, RegistrationValidator
 
 logger = logging.getLogger("register")
 
@@ -78,7 +77,6 @@ class RegistrationSerializer(EnumSupportSerializerMixin, serializers.ModelSerial
     class Meta:
         model = Registration
         fields = MINIMUM_NECESSARY_FIELDS + NATIONALLY_REQUIRED_FIELDS + OPTIONAL_FIELDS
-        validators = [RegistrationValidator(), AddressValidator()]
 
     def __init__(self, instance=None, data=empty, **kwargs):
         self.incomplete = kwargs.pop("incomplete", False)
