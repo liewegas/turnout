@@ -5,7 +5,12 @@ import pytest
 from model_bakery import baker
 from rest_framework.test import APIClient
 
-from common.enums import TurnoutRegistrationStatus, PersonTitle, PoliticalParties, RaceEthnicity
+from common.enums import (
+    PersonTitle,
+    PoliticalParties,
+    RaceEthnicity,
+    TurnoutRegistrationStatus,
+)
 from election.models import State
 from multi_tenant.models import Client
 from register.models import Registration
@@ -31,7 +36,7 @@ VALID_REGISTRATION = {
     "is_18_or_over": True,
     "state_id_number": "FOUNDER123",
     "party": "Other",
-    "race_ethnicity": "White"
+    "race_ethnicity": "White",
 }
 REGISTER_API_ENDPOINT_INCOMPLETE = "/v1/registration/register/?incomplete=true"
 
@@ -202,7 +207,9 @@ def test_invalid_state(requests_mock):
 @pytest.mark.django_db
 def test_update_status(requests_mock):
     client = APIClient()
-    register_response = client.post(REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION)
+    register_response = client.post(
+        REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION
+    )
     assert register_response.status_code == 200
     assert "uuid" in register_response.json()
 
@@ -224,7 +231,9 @@ def test_update_status(requests_mock):
 @pytest.mark.django_db
 def test_invalid_update_status(requests_mock):
     client = APIClient()
-    register_response = client.post(REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION)
+    register_response = client.post(
+        REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION
+    )
     assert register_response.status_code == 200
     assert "uuid" in register_response.json()
 
@@ -233,19 +242,21 @@ def test_invalid_update_status(requests_mock):
     assert registration.status == TurnoutRegistrationStatus.INCOMPLETE
 
     invalid_update_status = copy(STATUS_REFER_OVR)
-    invalid_update_status['status'] = "Invalid"
+    invalid_update_status["status"] = "Invalid"
 
     status_api_url = STATUS_API_ENDPOINT.format(uuid=registration.uuid)
     status_response = client.patch(status_api_url, invalid_update_status)
     assert status_response.status_code == 400
-    assert status_response.json() == {"status":["\"Invalid\" is not a valid choice."]}
+    assert status_response.json() == {"status": ['"Invalid" is not a valid choice.']}
     assert registration.status == TurnoutRegistrationStatus.INCOMPLETE
 
 
 @pytest.mark.django_db
 def test_bad_update_status(requests_mock):
     client = APIClient()
-    register_response = client.post(REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION)
+    register_response = client.post(
+        REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION
+    )
     assert register_response.status_code == 200
     assert "uuid" in register_response.json()
 
@@ -254,11 +265,12 @@ def test_bad_update_status(requests_mock):
     assert registration.status == TurnoutRegistrationStatus.INCOMPLETE
 
     bad_update_status = copy(STATUS_REFER_OVR)
-    bad_update_status['status'] = "SentPDF"
+    bad_update_status["status"] = "SentPDF"
 
     status_api_url = STATUS_API_ENDPOINT.format(uuid=registration.uuid)
     status_response = client.patch(status_api_url, bad_update_status)
     assert status_response.status_code == 400
-    assert status_response.json() == {"status": ["Registration status can only be ReferOVR"]}
+    assert status_response.json() == {
+        "status": ["Registration status can only be ReferOVR"]
+    }
     assert registration.status == TurnoutRegistrationStatus.INCOMPLETE
-
