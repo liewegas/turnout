@@ -44,6 +44,11 @@ STATUS_API_ENDPOINT = "/v1/registration/status/{uuid}/"
 STATUS_REFER_OVR = {"status": "ReferOVR"}
 
 
+@pytest.fixture()
+def submission_task_patch(mocker):
+    return mocker.patch("register.api_views.process_registration_submission")
+
+
 def test_get_request_disallowed():
     client = APIClient()
     response = client.get(REGISTER_API_ENDPOINT)
@@ -73,7 +78,7 @@ def test_blank_api_request(requests_mock):
 
 
 @pytest.mark.django_db
-def test_register_object_created(requests_mock):
+def test_register_object_created(requests_mock, submission_task_patch):
     client = APIClient()
 
     response = client.post(REGISTER_API_ENDPOINT, VALID_REGISTRATION)
@@ -106,9 +111,13 @@ def test_register_object_created(requests_mock):
     first_partner = Client.objects.first()
     assert registration.partner == first_partner
 
+    submission_task_patch.delay.assert_called_once_with(
+        registration.uuid, "FOUNDER123", True
+    )
+
 
 @pytest.mark.django_db
-def test_default_partner(requests_mock):
+def test_default_partner(requests_mock, submission_task_patch):
     client = APIClient()
 
     first_partner = Client.objects.first()
@@ -123,9 +132,13 @@ def test_default_partner(requests_mock):
     assert response.json()["uuid"] == str(registration.uuid)
     assert registration.partner == first_partner
 
+    submission_task_patch.delay.assert_called_once_with(
+        registration.uuid, "FOUNDER123", True
+    )
+
 
 @pytest.mark.django_db
-def test_custom_partner(requests_mock):
+def test_custom_partner(requests_mock, submission_task_patch):
     client = APIClient()
 
     second_partner = baker.make_recipe("multi_tenant.client")
@@ -140,9 +153,13 @@ def test_custom_partner(requests_mock):
     assert response.json()["uuid"] == str(registration.uuid)
     assert registration.partner == second_partner
 
+    submission_task_patch.delay.assert_called_once_with(
+        registration.uuid, "FOUNDER123", True
+    )
+
 
 @pytest.mark.django_db
-def test_invalid_partner_key(requests_mock):
+def test_invalid_partner_key(requests_mock, submission_task_patch):
     client = APIClient()
 
     first_partner = Client.objects.first()
@@ -157,6 +174,10 @@ def test_invalid_partner_key(requests_mock):
     registration = Registration.objects.first()
     assert response.json()["uuid"] == str(registration.uuid)
     assert registration.partner == first_partner
+
+    submission_task_patch.delay.assert_called_once_with(
+        registration.uuid, "FOUNDER123", True
+    )
 
 
 def test_not_us_citizen(requests_mock):
