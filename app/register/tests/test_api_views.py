@@ -56,7 +56,7 @@ def test_get_request_disallowed():
     assert response.json() == {"detail": 'Method "GET" not allowed.'}
 
 
-def test_blank_api_request(requests_mock):
+def test_blank_api_request():
     client = APIClient()
     response = client.post(REGISTER_API_ENDPOINT, {})
     assert response.status_code == 400
@@ -78,7 +78,7 @@ def test_blank_api_request(requests_mock):
 
 
 @pytest.mark.django_db
-def test_register_object_created(requests_mock, submission_task_patch):
+def test_register_object_created(submission_task_patch):
     client = APIClient()
 
     response = client.post(REGISTER_API_ENDPOINT, VALID_REGISTRATION)
@@ -117,7 +117,7 @@ def test_register_object_created(requests_mock, submission_task_patch):
 
 
 @pytest.mark.django_db
-def test_default_partner(requests_mock, submission_task_patch):
+def test_default_partner(submission_task_patch):
     client = APIClient()
 
     first_partner = Client.objects.first()
@@ -138,7 +138,7 @@ def test_default_partner(requests_mock, submission_task_patch):
 
 
 @pytest.mark.django_db
-def test_custom_partner(requests_mock, submission_task_patch):
+def test_custom_partner(submission_task_patch):
     client = APIClient()
 
     second_partner = baker.make_recipe("multi_tenant.client")
@@ -159,7 +159,7 @@ def test_custom_partner(requests_mock, submission_task_patch):
 
 
 @pytest.mark.django_db
-def test_invalid_partner_key(requests_mock, submission_task_patch):
+def test_invalid_partner_key(submission_task_patch):
     client = APIClient()
 
     first_partner = Client.objects.first()
@@ -180,7 +180,7 @@ def test_invalid_partner_key(requests_mock, submission_task_patch):
     )
 
 
-def test_not_us_citizen(requests_mock):
+def test_not_us_citizen():
     client = APIClient()
     not_citzen_register = copy(VALID_REGISTRATION)
     not_citzen_register["us_citizen"] = False
@@ -189,7 +189,7 @@ def test_not_us_citizen(requests_mock):
     assert response.json() == {"us_citizen": ["Must be true"]}
 
 
-def test_not_18_or_over(requests_mock):
+def test_not_18_or_over():
     client = APIClient()
     not_18_years_old_register = copy(VALID_REGISTRATION)
     not_18_years_old_register["is_18_or_over"] = False
@@ -198,7 +198,7 @@ def test_not_18_or_over(requests_mock):
     assert response.json() == {"is_18_or_over": ["Must be true"]}
 
 
-def test_invalid_zipcode(requests_mock):
+def test_invalid_zipcode():
     client = APIClient()
     bad_zip_register = copy(VALID_REGISTRATION)
     bad_zip_register["zipcode"] = "123"
@@ -207,7 +207,7 @@ def test_invalid_zipcode(requests_mock):
     assert response.json() == {"zipcode": ["Zip codes are 5 digits"]}
 
 
-def test_invalid_phone(requests_mock):
+def test_invalid_phone():
     client = APIClient()
     bad_phone_register = copy(VALID_REGISTRATION)
     bad_phone_register["phone"] = "123"
@@ -216,7 +216,7 @@ def test_invalid_phone(requests_mock):
     assert response.json() == {"phone": ["Enter a valid phone number."]}
 
 
-def test_invalid_state(requests_mock):
+def test_invalid_state():
     client = APIClient()
     bad_state_register = copy(VALID_REGISTRATION)
     bad_state_register["state"] = "ZZ"
@@ -226,7 +226,7 @@ def test_invalid_state(requests_mock):
 
 
 @pytest.mark.django_db
-def test_update_status(requests_mock):
+def test_update_status():
     client = APIClient()
     register_response = client.post(
         REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION
@@ -250,7 +250,7 @@ def test_update_status(requests_mock):
 
 
 @pytest.mark.django_db
-def test_invalid_update_status(requests_mock):
+def test_invalid_update_status():
     client = APIClient()
     register_response = client.post(
         REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION
@@ -273,7 +273,7 @@ def test_invalid_update_status(requests_mock):
 
 
 @pytest.mark.django_db
-def test_bad_update_status(requests_mock):
+def test_bad_update_status():
     client = APIClient()
     register_response = client.post(
         REGISTER_API_ENDPOINT_INCOMPLETE, VALID_REGISTRATION
