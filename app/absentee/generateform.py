@@ -9,6 +9,7 @@ from common import enums
 from common.analytics import statsd
 from common.pdf import PDFTemplate
 from election.models import StateInformation
+from multi_tenant.models import Client
 from official.models import Address
 from storage.models import StorageItem
 
@@ -88,7 +89,7 @@ def prepare_absentee_request_form(
     state_code: str,
     last_name: str,
     email: str,
-    partner: Optional[str] = None,
+    partner: Optional[Client] = None,
 ) -> StorageItem:
     form_data = prepare_formdata(region_external_id, state_code)
 
