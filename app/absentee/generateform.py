@@ -1,7 +1,6 @@
 import io
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.core.files import File
 from django.template.defaultfilters import slugify
 
@@ -9,9 +8,11 @@ from common import enums
 from common.analytics import statsd
 from common.pdf import PDFTemplate
 from election.models import StateInformation
-from multi_tenant.models import Client
 from official.models import Address
 from storage.models import StorageItem
+
+if TYPE_CHECKING:
+    from multi_tenant.models import Client
 
 
 class NoAbsenteeRequestMailingAddress(Exception):
@@ -89,7 +90,7 @@ def prepare_absentee_request_form(
     state_code: str,
     last_name: str,
     email: str,
-    partner: Optional[Client] = None,
+    partner: Optional["Client"] = None,
 ) -> StorageItem:
     form_data = prepare_formdata(region_external_id, state_code)
 
