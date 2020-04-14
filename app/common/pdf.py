@@ -74,14 +74,3 @@ class PDFTemplate:
                 handle.close()
 
         return final_pdf
-
-        # pypdftk.concat(files=self._template_files, out_file="/tmp/joined_pdf")
-
-        # pypdftk.fill_form(
-        #     pdf_path="/tmp/joined_pdf",
-        #     datas=data,
-        #     out_file="/tmp/filled_pdf",
-        #     flatten=False,
-        # )
-
-        # return open("/tmp/filled_pdf", "rb")
