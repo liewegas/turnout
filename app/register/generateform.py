@@ -7,7 +7,7 @@ from django.template.defaultfilters import slugify
 
 from common import enums
 from common.analytics import statsd
-from common.pdf import PDFTemplate
+from common.pdf import PDFTemplate, PDFTemplateSection
 from election.models import StateInformation
 from storage.models import StorageItem
 
@@ -29,7 +29,12 @@ def generate_name(registration):
 
 @statsd.timed("turnout.register.registration_submission_pdfgeneration")
 def generate_pdf(form_data):
-    return PDFTemplate([COVER_SHEET_PATH, TEMPLATE_PATH]).fill(form_data)
+    return PDFTemplate(
+        [
+            PDFTemplateSection(path=COVER_SHEET_PATH, is_form=True),
+            PDFTemplateSection(path=TEMPLATE_PATH, is_form=True),
+        ]
+    ).fill(form_data)
 
 
 def extract_formdata(registration, state_id_number, is_18_or_over):
@@ -78,6 +83,7 @@ def extract_formdata(registration, state_id_number, is_18_or_over):
         )
     except StateInformation.DoesNotExist:
         state_mailto_address = ""
+
     # split by linebreaks, because each line is a separate field in the PDF
     for num, line in enumerate(state_mailto_address.splitlines()):
         form_data[f"mailto_line_{num+1}"] = line
@@ -105,13 +111,13 @@ def extract_formdata(registration, state_id_number, is_18_or_over):
 def process_registration(registration, state_id_number, is_18_or_over):
     form_data = extract_formdata(registration, state_id_number, is_18_or_over)
 
-    filled_pdf = generate_pdf(form_data)
-    item = StorageItem(
-        app=enums.FileType.REGISTRATION_FORM,
-        email=registration.email,
-        partner=registration.partner,
-    )
-    item.file.save(generate_name(registration), File(filled_pdf), True)
+    with generate_pdf(form_data) as filled_pdf:
+        item = StorageItem(
+            app=enums.FileType.REGISTRATION_FORM,
+            email=registration.email,
+            partner=registration.partner,
+        )
+        item.file.save(generate_name(registration), File(filled_pdf), True)
 
     registration.result_item = item
     registration.save(update_fields=["result_item"])
