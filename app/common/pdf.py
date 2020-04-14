@@ -1,4 +1,7 @@
 # simple wrappers around pdfrw
+import io
+from typing import Any, BinaryIO, Dict, List, Optional
+
 from pdfrw import PdfDict, PdfName, PdfObject, PdfReader, PdfWriter
 
 ANNOT_KEY = "/Annots"
@@ -9,14 +12,17 @@ SUBTYPE_KEY = "/Subtype"
 WIDGET_SUBTYPE_KEY = "/Widget"
 
 
-def fill_form(input_file, output_file, data):
-    """input_file can be file object or path name
-    output_file can be file object or path name
-    data is dictionary with keys corresponding to the form fields"""
+def fill_form(input_file: BinaryIO, output_file: BinaryIO, data: Dict[str, Any]):
+    """
+    Given an input_file and a dictionary of data, fills in the AcroForm in the
+    input PDF with the data and writes the new PDF to the output_file
+    """
 
     the_pdf = PdfReader(input_file)
     for page in the_pdf.pages:
         annotations = page[ANNOT_KEY]
+        if annotations is None:
+            continue
         for annotation in annotations:
             if annotation[SUBTYPE_KEY] == WIDGET_SUBTYPE_KEY:
                 key = annotation[ANNOT_FIELD_KEY][1:-1]
@@ -43,15 +49,17 @@ def fill_form(input_file, output_file, data):
     PdfWriter().write(output_file, the_pdf)
 
 
-def join_files(input_files, output_file):
-    """input_files is a list of file objects or path names
-    output_file can be file object or path name"""
+def join_files(input_files: List[BinaryIO], output_file: BinaryIO):
+    """
+    Given a list of input_files, concatenates these PDFs and writes a single
+    concatenated PDF to output_file.
+    """
 
     # standard PdfWriter does not copy AcroForm objects
     # modified from https://stackoverflow.com/a/57687160
 
     output = PdfWriter()
-    output_acroform = None
+    output_acroform: Optional[Dict[str, Any]] = None
     for pdf in input_files:
         input = PdfReader(pdf, verbose=False)
         output.addpages(input.pages)
@@ -63,7 +71,7 @@ def join_files(input_files, output_file):
                 output_formfields = source_acroform[PdfName("Fields")]
             else:
                 output_formfields = []
-            if output_acroform == None:
+            if output_acroform is None:
                 # copy the first AcroForm node
                 output_acroform = source_acroform
             else:
@@ -101,3 +109,42 @@ def join_files(input_files, output_file):
                 output_acroform[PdfName("Fields")] += output_formfields
     output.trailer[PdfName("Root")][PdfName("AcroForm")] = output_acroform
     output.write(output_file)
+
+
+class PDFTemplate:
+    """
+    Constructs a template out a set of input PDFs with fillable AcroForms.
+    """
+
+    def __init__(self, template_files: List[str]):
+        self._template_files = template_files
+
+    def fill(self, data: Dict[str, Any]) -> io.BytesIO:
+        """
+        Concatenates all the template_files in this PDFTemplate, and fills in
+        the concatenated form with the given data.
+        """
+        template_pdfs = [
+            open(template_file, "rb") for template_file in self._template_files
+        ]
+
+        joined_pdf = io.BytesIO()
+        filled_pdf = io.BytesIO()
+
+        try:
+            # join PDFs
+            join_files(template_pdfs, joined_pdf)
+
+            # reset buffer on joined_pdf
+            joined_pdf.seek(0)
+
+            # fill from dict
+            fill_form(joined_pdf, filled_pdf, data)
+        finally:
+            # Close files
+            for template_pdf in template_pdfs:
+                template_pdf.close()
+
+            joined_pdf.close()
+
+        return filled_pdf

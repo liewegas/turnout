@@ -7,7 +7,7 @@ from django.template.defaultfilters import slugify
 
 from common import enums
 from common.analytics import statsd
-from common.pdf import fill_form, join_files
+from common.pdf import PDFTemplate
 from election.models import StateInformation
 from storage.models import StorageItem
 
@@ -29,27 +29,7 @@ def generate_name(registration):
 
 @statsd.timed("turnout.register.registration_submission_pdfgeneration")
 def generate_pdf(form_data):
-    # open file objects
-    template_pdf = open(TEMPLATE_PATH, "rb")
-    cover_pdf = open(COVER_SHEET_PATH, "rb")
-    joined_pdf = io.BytesIO()
-    filled_pdf = io.BytesIO()
-
-    # join cover pages
-    join_files([cover_pdf, template_pdf], joined_pdf)
-
-    # reset buffer on joined_pdf
-    joined_pdf.seek(0)
-
-    # fill from dict
-    fill_form(joined_pdf, filled_pdf, form_data)
-
-    # Close files
-    template_pdf.close()
-    cover_pdf.close()
-    joined_pdf.close()
-
-    return filled_pdf
+    return PDFTemplate([COVER_SHEET_PATH, TEMPLATE_PATH]).fill(form_data)
 
 
 def extract_formdata(registration, state_id_number, is_18_or_over):
@@ -107,7 +87,7 @@ def extract_formdata(registration, state_id_number, is_18_or_over):
         state_mail_deadline = (
             StateInformation.objects.only("field_type", "text")
             .get(
-                state=registration.state, field_type__slug="registration_deadline_mail",
+                state=registration.state, field_type__slug="registration_deadline_mail"
             )
             .text.lower()
         )
