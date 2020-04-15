@@ -11,6 +11,7 @@ import pypdftk
 class PDFTemplateSection:
     path: str
     is_form: bool = False
+    flatten_form: bool = True
 
 
 class PDFTemplate:
@@ -58,7 +59,7 @@ class PDFTemplate:
                     pdf_path=template_file.path,
                     datas=data,
                     out_file=filled_template.name,
-                    flatten=False,
+                    flatten=template_file.flatten_form,
                 )
 
                 filled_templates.append(filled_template.name)

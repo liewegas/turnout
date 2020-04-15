@@ -32,7 +32,7 @@ def generate_pdf(form_data):
     return PDFTemplate(
         [
             PDFTemplateSection(path=COVER_SHEET_PATH, is_form=True),
-            PDFTemplateSection(path=TEMPLATE_PATH, is_form=True),
+            PDFTemplateSection(path=TEMPLATE_PATH, is_form=True, flatten_form=False),
         ]
     ).fill(form_data)
 
