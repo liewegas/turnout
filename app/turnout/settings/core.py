@@ -409,6 +409,11 @@ LOGGING = {
             "level": env.str("DJANGO_LOGGING_LEVEL", default="INFO"),
             "propagate": False,
         },
+        "absentee": {
+            "handlers": [handler],
+            "level": env.str("DJANGO_LOGGING_LEVEL", default="INFO"),
+            "propagate": False,
+        },
     },
 }
 

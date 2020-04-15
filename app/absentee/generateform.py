@@ -1,3 +1,4 @@
+import logging
 from typing import IO, TYPE_CHECKING, Any, Dict, Optional
 
 from django.core.files import File
@@ -10,8 +11,9 @@ from election.models import StateInformation
 from official.models import Address
 from storage.models import StorageItem
 
-if TYPE_CHECKING:
-    from multi_tenant.models import Client
+from .models import BallotRequest
+
+logger = logging.getLogger("absentee")
 
 
 class NoAbsenteeRequestMailingAddress(Exception):
@@ -146,21 +148,26 @@ def generate_pdf(form_data: Dict[str, Any], state_code: str) -> IO:
     ).fill(form_data)
 
 
-# TODO: this should take the absentee request model object instead of a ton
-# of arguments
-def prepare_absentee_request_form(
-    region_external_id: str,
-    state_code: str,
-    last_name: str,
-    email: str,
-    partner: Optional["Client"] = None,
-) -> StorageItem:
-    form_data = prepare_formdata(region_external_id, state_code)
+def process_ballot_request(ballot_request: BallotRequest,):
+    form_data = prepare_formdata(
+        ballot_request.region.external_id, ballot_request.state.code
+    )
 
-    with generate_pdf(form_data, state_code) as filled_pdf:
+    with generate_pdf(form_data, ballot_request.state.code) as filled_pdf:
         item = StorageItem(
-            app=enums.FileType.ABSENTEE_REQUEST_FORM, email=email, partner=partner,
+            app=enums.FileType.ABSENTEE_REQUEST_FORM,
+            email=ballot_request.email,
+            partner=ballot_request.partner,
         )
-        item.file.save(generate_name(state_code, last_name), File(filled_pdf), True)
+        item.file.save(
+            generate_name(ballot_request.state.code, ballot_request.last_name),
+            File(filled_pdf),
+            True,
+        )
 
-        return item
+    ballot_request.result_item = item
+    ballot_request.save(update_fields=["result_item"])
+
+    # send_registration_notification.delay(ballot_request.pk)
+
+    logger.info(f"New PDF Created: Ballot Request {item.pk} ({item.download_url})")
