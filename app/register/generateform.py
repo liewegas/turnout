@@ -6,7 +6,7 @@ from django.template.defaultfilters import slugify
 
 from common import enums
 from common.analytics import statsd
-from common.pdf import PDFTemplate, PDFTemplateSection
+from common.pdf.pdftemplate import PDFTemplate, PDFTemplateSection
 from election.models import StateInformation
 from storage.models import StorageItem
 
