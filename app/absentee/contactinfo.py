@@ -36,7 +36,7 @@ def absentee_address_score(addr: Address) -> int:
         return 3
 
 
-def get_absentee_contact_info(region_external_id: str) -> AbsenteeContactInfo:
+def get_absentee_contact_info(region_external_id: int) -> AbsenteeContactInfo:
     office_addresses = sorted(
         Address.objects.filter(office__region__external_id=region_external_id),
         key=absentee_address_score,

@@ -46,7 +46,7 @@ def state_text_property(state_code: str, slug: str, lower=False) -> Optional[str
         return None
 
 
-def prepare_formdata(region_external_id: str, state_code: str) -> Dict[str, Any]:
+def prepare_formdata(region_external_id: int, state_code: str) -> Dict[str, Any]:
     """
     Assembles all the form data we need to fill out an absentee ballot request
     form.
