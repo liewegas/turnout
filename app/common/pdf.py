@@ -1,10 +1,10 @@
 # simple wrappers around pdfrw
-import io
 import tempfile
 from dataclasses import dataclass
-from typing import IO, Any, Dict, List, Optional
+from typing import IO, Any, Dict, List
 
 import pypdftk
+from common.analytics import statsd
 
 
 @dataclass
@@ -20,7 +20,7 @@ class PDFTemplate:
     """
 
     def __init__(self, template_files: List[PDFTemplateSection]):
-        self._template_files = template_files
+        self.template_files = template_files
 
     def fill(self, raw_data: Dict[str, Any]) -> IO:
         """
@@ -42,18 +42,18 @@ class PDFTemplate:
 
         # Create the final output file and track all the temp files we'll have
         # to close at the end
-        final_pdf = tempfile.NamedTemporaryFile("rb+", delete=False)
+        final_pdf = tempfile.NamedTemporaryFile("rb+")
         handles_to_close: List[IO] = []
 
         try:
             # Fill in all of the forms
             filled_templates = []
-            for template_file in self._template_files:
+            for template_file in self.template_files:
                 if not template_file.is_form:
                     filled_templates.append(template_file.path)
                     continue
 
-                filled_template = tempfile.NamedTemporaryFile("r", delete=False)
+                filled_template = tempfile.NamedTemporaryFile("r")
                 handles_to_close.append(filled_template)
                 pypdftk.fill_form(
                     pdf_path=template_file.path,
@@ -68,6 +68,7 @@ class PDFTemplate:
             pypdftk.concat(files=filled_templates, out_file=final_pdf.name)
 
         except:
+            statsd.increment("turnout.pdf.pdftk_exception")
             final_pdf.close()
             raise
         finally:

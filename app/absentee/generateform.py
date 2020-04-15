@@ -1,4 +1,3 @@
-import io
 from typing import IO, TYPE_CHECKING, Any, Dict, Optional
 
 from django.core.files import File

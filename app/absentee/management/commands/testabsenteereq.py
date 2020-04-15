@@ -1,8 +1,6 @@
 from django.core.management.base import BaseCommand
-from django.forms.models import model_to_dict
 
 from absentee.generateform import prepare_absentee_request_form
-from official.models import Address
 
 
 class Command(BaseCommand):

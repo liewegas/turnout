@@ -1,4 +1,3 @@
-import io
 import logging
 
 from django.core.files import File
@@ -93,7 +92,7 @@ def extract_formdata(registration, state_id_number, is_18_or_over):
         state_mail_deadline = (
             StateInformation.objects.only("field_type", "text")
             .get(
-                state=registration.state, field_type__slug="registration_deadline_mail"
+                state=registration.state, field_type__slug="registration_deadline_mail",
             )
             .text.lower()
         )
