@@ -8,17 +8,13 @@ from common import enums
 from common.analytics import statsd
 from common.pdf import PDFTemplate, PDFTemplateSection
 from election.models import StateInformation
-from official.models import Address
 from storage.models import StorageItem
 
+from .contactinfo import get_absentee_contact_info
 from .models import BallotRequest
+from .tasks import send_ballotrequest_notification
 
 logger = logging.getLogger("absentee")
-
-
-class NoAbsenteeRequestMailingAddress(Exception):
-    pass
-
 
 COVER_SHEET_PATH = "absentee/templates/pdf/cover.pdf"
 
@@ -50,27 +46,6 @@ def state_text_property(state_code: str, slug: str, lower=False) -> Optional[str
         return "As soon as possible."
 
 
-def absentee_address_score(addr: Address) -> int:
-    """
-    Returns a "score" for how appropriate it is to talk to this Address about
-    absentee ballots.
-
-    1: This is an office that accept absentee ballot forms by mail
-    2: This is an office that processes absentee ballot forms
-    3: All other offices
-
-    We will only tell users to mail to offices with a score of 1, but we may
-    give them contact info for 2's and 3's if there are no 1's with contact
-    info.
-    """
-    if addr.process_absentee_requests and addr.is_regular_mail:
-        return 1
-    elif addr.process_absentee_requests:
-        return 2
-    else:
-        return 3
-
-
 def prepare_formdata(region_external_id: str, state_code: str) -> Dict[str, Any]:
     """
     Assembles all the form data we need to fill out an absentee ballot request
@@ -78,44 +53,16 @@ def prepare_formdata(region_external_id: str, state_code: str) -> Dict[str, Any]
     """
     form_data: Dict[str, Any] = {}
 
-    # find the mailing address
-    office_addresses = Address.objects.filter(
-        office__region__external_id=region_external_id
-    )
+    # find the mailing address and contact info
+    contact_info = get_absentee_contact_info(region_external_id)
+    form_data["vbm_submission_address"] = contact_info.mailing_address
 
-    absentee_mailing_addresses = [
-        addr for addr in office_addresses if absentee_address_score(addr) == 1
-    ]
-
-    if len(absentee_mailing_addresses) == 0:
-        raise NoAbsenteeRequestMailingAddress(
-            f"No absentee request mailing address for region {region_external_id}"
-        )
-
-    absentee_mailing_address = absentee_mailing_addresses[0]
-    form_data["vbm_submission_address"] = "\n".join(
-        [
-            line
-            for line in [
-                absentee_mailing_address.address,
-                absentee_mailing_address.address2,
-                absentee_mailing_address.address3,
-                f"{absentee_mailing_address.city.title()}, {absentee_mailing_address.state.code} {absentee_mailing_address.zipcode}",
-            ]
-            if line is not None and len(line) > 0
-        ]
-    )
-
-    # Find contact info
-    email = next((addr.email for addr in office_addresses if addr.email), None)
-    phone = next((addr.phone for addr in office_addresses if addr.phone), None)
-
-    if email or phone:
+    if contact_info.email or contact_info.phone:
         contact_info_lines = []
-        if email:
-            contact_info_lines.append(f"Email: {email}")
-        if phone:
-            contact_info_lines.append(f"Phone: {phone}")
+        if contact_info.email:
+            contact_info_lines.append(f"Email: {contact_info.email}")
+        if contact_info.phone:
+            contact_info_lines.append(f"Phone: {contact_info.phone}")
 
         form_data["vbm_contact_info"] = "\n".join(contact_info_lines)
     else:
@@ -168,6 +115,6 @@ def process_ballot_request(ballot_request: BallotRequest,):
     ballot_request.result_item = item
     ballot_request.save(update_fields=["result_item"])
 
-    # send_registration_notification.delay(ballot_request.pk)
+    send_ballotrequest_notification.delay(ballot_request.pk)
 
-    logger.info(f"New PDF Created: Ballot Request {item.pk} ({item.download_url})")
+    logger.info(f"New PDF Created: Ballot Request {item.pk}")

@@ -123,4 +123,4 @@ def process_registration(registration, state_id_number, is_18_or_over):
 
     send_registration_notification.delay(registration.pk)
 
-    logger.info(f"New PDF Created: Registration {item.pk} ({item.download_url})")
+    logger.info(f"New PDF Created: Registration {item.pk}")
