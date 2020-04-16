@@ -5,7 +5,7 @@ from typing import IO, Any, Dict, List
 
 from common.analytics import statsd
 
-from . import pypdftk
+from .pypdftk import PyPDFTK
 
 
 @dataclass
@@ -45,6 +45,7 @@ class PDFTemplate:
         # to close at the end
         final_pdf = tempfile.NamedTemporaryFile("rb+")
         handles_to_close: List[IO] = []
+        pypdftk = PyPDFTK()
 
         try:
             # Fill in all of the forms
