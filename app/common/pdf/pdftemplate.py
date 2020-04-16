@@ -3,8 +3,9 @@ import tempfile
 from dataclasses import dataclass
 from typing import IO, Any, Dict, List
 
-import pypdftk
 from common.analytics import statsd
+
+from . import pypdftk
 
 
 @dataclass

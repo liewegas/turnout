@@ -22,9 +22,6 @@ shell:
 clientshell:
 	docker-compose exec client /bin/bash
 
-workershell:
-	docker-compose exec worker /bin/bash
-
 testpy:
 	docker-compose exec server pytest /app/
 
