@@ -17,7 +17,6 @@ import tempfile
 from typing import Dict, List, Optional, Tuple, cast
 
 from common.apm import tracer
-from common.utils.decorate_all_methods import decorate_all_methods
 
 log = logging.getLogger("pypdftk")
 
@@ -94,7 +93,6 @@ def pdftk_cmd_util(
     return out_file
 
 
-@decorate_all_methods(tracer.wrap(service="pypdftk"))
 class PyPDFTK:
     def get_num_pages(self, pdf_path: str) -> int:
         """ return number of pages in a given PDF file """
@@ -103,6 +101,7 @@ class PyPDFTK:
                 return int(line.split(b":")[1])
         return 0
 
+    @tracer.wrap(name="fill_form", service="pypdftk")
     def fill_form(
         self,
         pdf_path: str,
@@ -136,6 +135,7 @@ class PyPDFTK:
         os.remove(tmp_fdf)
         return out_file
 
+    @tracer.wrap(name="dump_data_fields", service="pypdftk")
     def dump_data_fields(self, pdf_path: str) -> List[Dict[str, str]]:
         """
             Return list of dicts of all fields in a PDF.
@@ -158,6 +158,7 @@ class PyPDFTK:
         ]
         return [dict(f) for f in fields]
 
+    @tracer.wrap(name="concat", service="pypdftk")
     def concat(self, files: List[str], out_file: Optional[str] = None) -> str:
         """
             Merge multiples PDF files.
@@ -184,6 +185,7 @@ class PyPDFTK:
                 os.close(handle)
         return out_file
 
+    @tracer.wrap(name="split", service="pypdftk")
     def split(self, pdf_path: str, out_dir: Optional[str] = None) -> List[str]:
         """
             Split a single PDF file into pages.
@@ -204,6 +206,7 @@ class PyPDFTK:
         out_files.sort()
         return [os.path.join(out_dir, filename) for filename in out_files]
 
+    @tracer.wrap(name="gen_xfdf", service="pypdftk")
     def gen_xfdf(self, datas: Dict[str, str] = {}):
         """ Generates a temp XFDF file suited for fill_form function, based on dict input data """
         fields = []
@@ -225,6 +228,7 @@ class PyPDFTK:
         f.close()
         return out_file
 
+    @tracer.wrap(name="replace_page", service="pypdftk")
     def replace_page(self, pdf_path: str, page_number: int, pdf_to_insert_path: str):
         """
         Replace a page in a PDF (pdf_path) by the PDF pointed by pdf_to_insert_path.
@@ -259,6 +263,7 @@ class PyPDFTK:
         shutil.copy(output_temp, pdf_path)
         os.remove(output_temp)
 
+    @tracer.wrap(name="stamp", service="pypdftk")
     def stamp(
         self, pdf_path: str, stamp_pdf_path: str, output_pdf_path: Optional[str] = None
     ) -> str:
@@ -271,6 +276,7 @@ class PyPDFTK:
         run_command(args)
         return output
 
+    @tracer.wrap(name="compress", service="pypdftk")
     def compress(
         self, pdf_path: str, out_file: Optional[str] = None, flatten: bool = True
     ) -> str:
@@ -288,6 +294,7 @@ class PyPDFTK:
 
         return pdftk_cmd_util(pdf_path, "compress", out_file, flatten)
 
+    @tracer.wrap(name="uncompress", service="pypdftk")
     def uncompress(
         self, pdf_path: str, out_file: Optional[str] = None, flatten: bool = True
     ) -> str:
