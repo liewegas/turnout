@@ -13,7 +13,7 @@ before_install:
   - touch .env
 
 install:
-  - docker-compose build redis postgres server
+  - docker-compose build server
 
 script:
   - docker-compose run server bash -c "pytest /app/ && mypy /app/"
