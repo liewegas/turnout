@@ -12,6 +12,7 @@ before_install:
   - docker pull $CACHE_IMAGE:latest || true
 
 install:
+  - docker build -f Dockerfile-dev .
   - docker-compose build
 
 before_script:

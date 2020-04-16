@@ -23,8 +23,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-dev
-      cache_from:
-        - voteamerica/turnout-ci-cache:latest
     entrypoint: wait-for-it postgres:5432 redis:6379 --
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
@@ -50,8 +48,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-dev
-      cache_from:
-        - voteamerica/turnout-ci-cache:latest
     entrypoint: wait-for-it postgres:5432 redis:6379 --
     command: watchmedo auto-restart --directory /app/ --pattern=*.py --recursive -- python -m celery -A turnout.celery_app beat --scheduler redbeat.RedBeatScheduler
     volumes:
@@ -75,8 +71,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-dev
-      cache_from:
-        - voteamerica/turnout-ci-cache:latest
     entrypoint: wait-for-it postgres:5432 redis:6379 --
     command: watchmedo auto-restart --directory /app/ --pattern=*.py --recursive -- python -m celery -A turnout.celery_app worker -Q default
     volumes:
@@ -101,8 +95,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-dev
-      cache_from:
-        - voteamerica/turnout-ci-cache:latest
     command: npm run develop
     volumes:
       - ./app:/app
@@ -116,8 +108,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-dev
-      cache_from:
-        - voteamerica/turnout-ci-cache:latest
     command: python -m echo
     volumes:
       - ./app/echo.py:/app/echo.py
