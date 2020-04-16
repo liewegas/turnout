@@ -4,3 +4,5 @@ WORKDIR $APP_DIR
 COPY scripts/docker_build_step1.sh scripts/docker_build_step2.sh /root/
 COPY app/requirements.txt app/package.json app/package-lock.json $APP_DIR/
 RUN bash /root/docker_build_step1.sh
+RUN apt-get update && apt-get install -y \
+    wait-for-it && apt-get clean
