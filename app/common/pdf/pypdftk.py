@@ -31,8 +31,7 @@ else:
 
 def run_command(command: List[str], shell=False, timeout=60) -> List[bytes]:
     """ run a system command and yield output """
-    with tracer.trace("pdftk.shell_out", service="pdftk"):
-        result = subprocess.run(command, timeout=timeout, capture_output=True)
+    result = subprocess.run(command, timeout=timeout, capture_output=True)
 
     if result.returncode != 0:
         cmdstr = " ".join(command)
