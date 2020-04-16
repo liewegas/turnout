@@ -7,7 +7,7 @@ before_install:
   - touch .env
 
 install:
-  - docker-compose build server
+  - docker-compose build
 
 script:
   - docker-compose run server bash -c "pytest /app/ && mypy /app/"
