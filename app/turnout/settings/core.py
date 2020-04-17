@@ -102,6 +102,7 @@ FIRST_PARTY_APPS = [
     "action",
     "absentee",
     "official",
+    "statewatch",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + FIRST_PARTY_APPS
