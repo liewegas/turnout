@@ -198,3 +198,11 @@ class SubmissionType(Enum, metaclass=EnumMeta):
 
 class ExternalToolType(Enum, metaclass=EnumMeta):
     ACTIONNETWORK = "actionnetwork"
+
+
+class ProxyStatus(Enum, metaclass=EnumMeta):
+    CREATING = "creating"
+    PREPARING = "preparing"
+    UP = "up"
+    BURNED = "burned"
+    DOWN = "down"

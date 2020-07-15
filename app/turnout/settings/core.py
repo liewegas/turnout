@@ -116,6 +116,7 @@ FIRST_PARTY_APPS = [
     "reporting",
     "fax",
     "integration",
+    "leouptime",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + FIRST_PARTY_APPS
@@ -204,6 +205,9 @@ USVF_SYNC = env.bool("USVF_SYNC", False)
 USVF_SYNC_HOUR = env.int("USVF_SYNC_HOUR", 6)
 USVF_SYNC_MINUTE = env.int("USVF_SYNC_MINUTE", 30)
 
+UPTIME_CHECK_CRON_MINUTE = env.str("UPTIME_CHECK_CRON_MINUTE", default=None)
+UPTIME_TWITTER_CRON_MINUTE = env.str("UPTIME_TWITTER_CRON_MINUTE", default=None)
+
 # This (daily?) sync is only to catch stragglers that don't sync in realtime.
 ACTIONNETWORK_SYNC = env.bool("ACTIONNETWORK_SYNC", False)
 ACTIONNETWORK_SYNC_DAILY = env.bool("ACTIONNETWORK_SYNC_DAILY", False)
@@ -223,6 +227,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_TASK_DEFAULT_QUEUE = "default"
 CELERY_TASK_QUEUES = {
     Queue("default", routing_key="task.#"),
+    Queue("uptime"),
 }
 CELERY_BEAT_SCHEDULE = {
     "trigger-netlify-updated-information": {
@@ -252,6 +257,20 @@ if OVBM_SYNC:
     CELERY_BEAT_SCHEDULE["trigger-ovbm-sync"] = {
         "task": "absentee.tasks.refresh_region_links",
         "schedule": crontab(minute=OVBM_SYNC_MINUTE, hour=OVBM_SYNC_HOUR),
+    }
+if UPTIME_CHECK_CRON_MINUTE:
+    CELERY_BEAT_SCHEDULE["trigger-check-uptime"] = {
+        "task": "leouptime.tasks.check_uptime",
+        "schedule": crontab(minute=UPTIME_CHECK_CRON_MINUTE),
+    }
+    CELERY_BEAT_SCHEDULE["trigger-check-proxies"] = {
+        "task": "leouptime.tasks.check_proxies",
+        "schedule": crontab(minute=UPTIME_CHECK_CRON_MINUTE),
+    }
+if UPTIME_TWITTER_CRON_MINUTE:
+    CELERY_BEAT_SCHEDULE["trigger-tweet-uptime"] = {
+        "task": "leouptime.tasks.tweet_uptime",
+        "schedule": crontab(minute=UPTIME_TWITTER_CRON_MINUTE),
     }
 
 #### END CELERY CONFIGURATION
@@ -503,6 +522,11 @@ LOGGING = {
             "level": env.str("DJANGO_LOGGING_LEVEL", default="INFO"),
             "propagate": False,
         },
+        "leouptime": {
+            "handlers": [handler],
+            "level": env.str("DJANGO_LOGGING_LEVEL", default="INFO"),
+            "propagate": False,
+        },
     },
 }
 
@@ -649,3 +673,21 @@ PA_OVR_KEY = env.str("PA_OVR_KEY", default=None)
 PA_OVR_STAGING = env.bool("PA_OVR_STAGING", default=True)
 
 #### END PA OVR CONFIGURATION
+
+#### UPTIME CONFIGURATION
+
+UPTIME_TWITTER_CONSUMER_KEY = env.str("UPTIME_TWITTER_CONSUMER_KEY", default=None)
+UPTIME_TWITTER_CONSUMER_SECRET = env.str("UPTIME_TWITTER_CONSUMER_SECRET", default=None)
+UPTIME_TWITTER_ACCESS_TOKEN = env.str("UPTIME_TWITTER_ACCESS_TOKEN", default=None)
+UPTIME_TWITTER_ACCESS_TOKEN_SECRET = env.str(
+    "UPTIME_TWITTER_ACCESS_TOKEN_SECRET", default=None
+)
+
+DIGITALOCEAN_KEY = env.str("DIGITALOCEAN_KEY", default=None)
+
+PROXY_SSH_KEY = env.str("PROXY_SSH_KEY", default=None)
+PROXY_SSH_PUB = env.str("PROXY_SSH_PUB", default=None)
+PROXY_SSH_KEY_ID = env.int("PROXY_SSH_KEY_ID", default=None)
+PROXY_COUNT = env.int("PROXY_COUNT", 5)
+
+#### END UPTIME CONFIGURATION
