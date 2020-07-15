@@ -140,3 +140,91 @@ Example response:
 ```
 
 The `external_id` can be used to link to the VoteAmerica LEO contact page for that region, e.g. `https://www.voteamerica.com/local-election-offices/DC/430653/`. It can also be used to match to a region in the [US Vote Foundation Data Set](https://civicdata.usvotefoundation.org/content/local-election-official-and-office-contact-data){target=_blank}. You'll need to [reach out to the US Vote Foundation](https://civicdata.usvotefoundation.org/#request-access){target=_blank} for access to that data set.
+
+
+## GET `/leouptime/sites/`
+
+List per-State voter tools that we monitor, along with their uptime stats.
+
+Example resposne:
+
+```json
+[
+  {
+    "uuid": "RPjRpqOhQ7ObW4TlUGAVgA",
+    "url": "https://s1.sos.mo.gov/elections/voterlookup/",
+    "description": "MO Voter Registration Status Verifier",
+    "state_up": true,
+    "state_changed_at": "2020-07-15T17:34:25.089293Z",
+    "last_went_down_at": null,
+    "last_went_up_at": "2020-07-15T17:34:25.089293Z",
+    "last_tweet_at": null,
+    "uptime_day": 1,
+    "uptime_week": 1,
+    "uptime_month": 1,
+    "uptime_quarter": 1
+  },
+  ...
+]
+```
+
+## GET `/leouptime/sites-down/`
+
+List sites that currently appear to be down.
+
+Example response:
+
+```json
+[
+  {
+    "uuid": "RPjRpqOhQ7ObW4TlUGAVgA",
+    "url": "https://s1.sos.mo.gov/elections/voterlookup/",
+    "description": "MO Voter Registration Status Verifier",
+    "state_up": false,
+    "state_changed_at": "2020-07-15T17:34:25.089293Z",
+    "last_went_down_at": "2020-07-15T17:34:25.089293Z",
+    "last_went_up_at": "2020-07-10T17:30:25.079993Z",
+    "last_tweet_at": null,
+    "uptime_day": .99,
+    "uptime_week": .999,
+    "uptime_month": .9999,
+    "uptime_quarter": .99999
+  }
+]
+```
+
+## GET `/leouptime/sites/<uuid>/checks`
+
+List all past checks for a site, along with latency and error result (if any).
+
+Example response:
+
+```json
+[
+  {
+    "site": "FEH9617QQHuCpYkLo9pbZg",
+    "state_up": true,
+    "ignore": false,
+    "load_time": 4.817969,
+    "error": null,
+    "proxy": "165.227.59.32:4455",
+    "created_at": "2020-07-15T18:47:31.070997Z"
+  }
+]
+```
+
+## GET `/leouptime/sites/<uuid>/downtime`
+
+List all intervals of observed downtime for a site.
+
+Example response:
+```json
+[
+  {
+    "start": "2020-07-15T18:47:31.070997Z",
+    "end": "2020-07-15T19:37:31.070997Z",
+    "duration": "0:50:00",
+    "duration_seconds": 3000,
+  }
+]
+```
