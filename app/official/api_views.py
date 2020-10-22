@@ -40,6 +40,15 @@ class RegionDetailViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
 @api_view(["GET"])
 def address_regions(request):
-    return Response(
-        {"alert": "This resource has been disabled."}, status=status.HTTP_404_NOT_FOUND
+    regions, was_geocode_error = get_regions_for_address(
+        street=request.query_params.get("address1", None),
+        city=request.query_params.get("city", None),
+        state=request.query_params.get("state", None),
+        zipcode=request.query_params.get("zipcode", None),
     )
+
+    if was_geocode_error:
+        return Response("unable to geocode address", status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = RegionNameSerializer(regions, many=True)
+    return Response(serializer.data)
