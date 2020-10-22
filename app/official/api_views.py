@@ -1,9 +1,12 @@
 import logging
 
 from rest_framework import mixins, status, viewsets
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from apikey.auth import ApiKeyAuthentication, ApiKeyRequired
+
+from .match import get_regions_for_address
 from .models import Region
 from .serializers import RegionDetailSerializer, RegionNameSerializer
 
@@ -38,17 +41,26 @@ class RegionDetailViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     lookup_field = "external_id"
 
 
-@api_view(["GET"])
-def address_regions(request):
-    regions, was_geocode_error = get_regions_for_address(
-        street=request.query_params.get("address1", None),
-        city=request.query_params.get("city", None),
-        state=request.query_params.get("state", None),
-        zipcode=request.query_params.get("zipcode", None),
-    )
+class AddressRegionView(APIView):
+    authentication_classes = [ApiKeyAuthentication]
+    permission_classes = [ApiKeyRequired]
 
-    if was_geocode_error:
-        return Response("unable to geocode address", status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request, format=None):
+        if not request.auth.subscriber.is_first_party:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
-    serializer = RegionNameSerializer(regions, many=True)
-    return Response(serializer.data)
+        regions, was_geocode_error = get_regions_for_address(
+            street=request.query_params.get("address1", None),
+            city=request.query_params.get("city", None),
+            state=request.query_params.get("state", None),
+            zipcode=request.query_params.get("zipcode", None),
+        )
+
+        if was_geocode_error:
+            return Response(
+                {"error": "unable to geocode address"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = RegionDetailSerializer(regions, many=True)
+        return Response({"regions": serializer.data, "error": None,})
